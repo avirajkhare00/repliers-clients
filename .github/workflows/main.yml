@@ -15,18 +15,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Download OpenAPI Spec
+        run: curl -o openapi.json ${{ github.event.inputs.openapi_url }}
+
       - name: Generate Python Client
         uses: hatamiarash7/openapi-generator@v0.3.0
         with:
           generator: python
-          spec: ${{ github.event.inputs.openapi_url }}
+          spec: ./openapi.json
           output: ./python-client
 
       - name: Archive Generated Client
         run: zip -r python-client.zip python-client
 
       - name: Upload Client as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: python-client
           path: python-client.zip
