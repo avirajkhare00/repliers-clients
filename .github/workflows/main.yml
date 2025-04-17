@@ -26,7 +26,7 @@ jobs:
         run: zip -r python-client.zip python-client
 
       - name: Upload Client as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-client
           path: python-client.zip
