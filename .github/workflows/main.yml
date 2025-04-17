@@ -1,0 +1,32 @@
+name: Generate Python Client
+
+on:
+  workflow_dispatch:
+    inputs:
+      openapi_url:
+        description: 'OpenAPI Spec URL'
+        required: true
+        default: 'https://docs.repliers.io/openapi/623b8d72c3688c076e0b802a'
+
+jobs:
+  generate-client:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Generate Python Client
+        uses: hatamiarash7/openapi-generator@v0.3.0
+        with:
+          generator: python
+          spec: ${{ github.event.inputs.openapi_url }}
+          output: ./python-client
+
+      - name: Archive Generated Client
+        run: zip -r python-client.zip python-client
+
+      - name: Upload Client as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-client
+          path: python-client.zip
