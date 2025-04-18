@@ -38,17 +38,36 @@ jobs:
           
       - name: Generate Python client
         run: |
-          openapi-python-client generate --url ${{ github.event.inputs.openapi_url }}
+          openapi-python-client generate --url ${{ github.event.inputs.openapi_url || github.event.inputs.openapi_url }}
+
+      - name: Package generated client
+        run: |
+          GENERATED_DIR=$(find . -type d -name "*-client" -o -name "*_client" | head -n 1)
+          echo "Generated directory: $GENERATED_DIR"
+          
+          # Create a zip archive
+          zip -r python-client.zip $GENERATED_DIR
+          echo "GENERATED_DIR=$GENERATED_DIR" >> $GITHUB_ENV
 
       - name: Create Release
+        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.tag_name }} # Use the tag_name input
-          release_name: "Release ${{ github.event.inputs.tag_name }}" # Customize as needed
+          tag_name: ${{ github.event.inputs.tag_name }}
+          release_name: "Release ${{ github.event.inputs.tag_name }}"
           body: |
             Generated Python client from OpenAPI specification.
-          file: './'
           draft: false
           prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./python-client.zip
+          asset_name: python-client.zip
+          asset_content_type: application/zip
