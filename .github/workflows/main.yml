@@ -1,35 +1,56 @@
 name: Generate Python Client
 
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       openapi_url:
-        description: 'OpenAPI Spec URL'
+        description: "URL to the OpenAPI specification file"
         required: true
-        default: 'https://docs.repliers.io/openapi/623b8d72c3688c076e0b802a'
+        default: "https://docs.repliers.io/openapi/623b8d72c3688c076e0b802a"
+      tag_name:
+        description: "Tag name for the release (e.g., v1.0.0)"
+        required: true
 
 jobs:
-  generate-client:
+  generate:
     runs-on: ubuntu-latest
+    name: Generate Client
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Download OpenAPI Spec
-        run: curl -o openapi.json ${{ github.event.inputs.openapi_url }}
-
-      - name: Generate Python Client
-        uses: hatamiarash7/openapi-generator@v0.3.0
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          generator: python
-          spec: ./openapi.json
-          output: ./python-client
+          python-version: 3.12
 
-      - name: Archive Generated Client
-        run: zip -r python-client.zip python-client
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install openapi-python-client
 
-      - name: Upload Client as Artifact
-        uses: actions/upload-artifact@v4
+      - name: Fetch OpenAPI specification
+        run: |
+          curl -o openapi.yaml ${{ github.event.inputs.openapi_url }} # Use input URL
+
+      - name: Generate Python client
+        run: |
+          openapi-python-client generate \
+            --file openapi.yaml \
+            --output client/
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: python-client
-          path: python-client.zip
+          tag_name: ${{ github.event.inputs.tag_name }} # Use the tag_name input
+          release_name: "Release ${{ github.event.inputs.tag_name }}" # Customize as needed
+          body: |
+            Generated Python client from OpenAPI specification.
+            See the release page.
+          draft: false
+          prerelease: false
