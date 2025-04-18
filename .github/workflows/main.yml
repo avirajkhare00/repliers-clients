@@ -31,16 +31,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install openapi-python-client
-
-      - name: Fetch OpenAPI specification
-        run: |
-          curl -o openapi.yaml ${{ github.event.inputs.openapi_url }} # Use input URL
-
+          
       - name: Generate Python client
         run: |
-          openapi-python-client generate \
-            --file openapi.yaml \
-            --output client/
+          openapi-python-client generate --url ${{ github.event.inputs.openapi_url }}
 
       - name: Create Release
         uses: actions/create-release@v1
@@ -51,6 +45,5 @@ jobs:
           release_name: "Release ${{ github.event.inputs.tag_name }}" # Customize as needed
           body: |
             Generated Python client from OpenAPI specification.
-            See the release page.
           draft: false
           prerelease: false
