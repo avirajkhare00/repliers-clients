@@ -49,5 +49,6 @@ jobs:
           release_name: "Release ${{ github.event.inputs.tag_name }}" # Customize as needed
           body: |
             Generated Python client from OpenAPI specification.
+          file: './'
           draft: false
           prerelease: false
